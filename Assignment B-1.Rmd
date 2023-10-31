@@ -1,0 +1,106 @@
+---
+title: "Assignment B-1"
+author: "Steven Duan"
+date: "2023-10-27"
+output: github_document
+---
+### Setup R Library
+```{r}
+library(tidyverse)
+library(datateachr)
+library(testthat)
+```
+
+### Exercise 1 & 2: Make a Function and Document it
+```{R}
+#' @title Function group_statistics 
+#' @description This function is used to bundle a specific group_by() %>%      
+#' summarise() workflow.
+#' This function output summary statistics based on corresponding dataset and 
+#' factors.
+#' @param data is the input dataset.
+#' @param group_by_x is the variable to be grouped of.
+#' @param summarise_x is the variable to be summarized with.
+#' @return the mean, median, range and variance of summarise_x group by group_by_x.
+#' @export
+group_statistics <- function(data, group_by_x, summarise_x) {
+  if(is.null(data[[as.character(substitute(group_by_x))]])) {
+    stop("Error. Your input group_by_x does not contain a valid column name from your dataset.\n")
+  }
+  if(!is.numeric(data[[as.character(substitute(summarise_x))]])) {
+    stop("Error. This function only works for numeric input for the variable to be summarized with.\n")
+  }
+  result <- data %>% 
+    group_by({{ group_by_x }}) %>% 
+    summarise(Mean = mean({{ summarise_x }}, na.rm=T),
+              Median = median({{ summarise_x }}, na.rm=T),
+              range =  diff(range({{ summarise_x }}), na.rm=T),
+              variance = var({{ summarise_x }}), na.rm=T)
+  return(result)
+}
+```
+
+### Exercise 3: Example
+
+```{r}
+#Example 1
+#Type of group_by_x: numeric, Type of summarise_x: numeric
+#The function is supposed to work and output corresponding summary statistics for the variable `diameter` grouped by `civic_number`.
+example1 <- group_statistics(vancouver_trees, civic_number, diameter)
+example1
+
+```
+```{r}
+#Example 2
+#Type of group_by_x: character, Type of summarise_x: numeric
+#The function is supposed to work and output corresponding summary statistics for the variable `diameter` grouped by `genus_name`
+example2 <- group_statistics(vancouver_trees, genus_name, diameter)
+example2
+```
+```{r}
+#Example 3
+#Type of group_by_x: date, Type of summarise_x: numeric
+#The function is supposed to work and output corresponding summary statistics for the variable `diameter` grouped by `date_planted`
+example3 <- group_statistics(vancouver_trees, date_planted, diameter)
+example3
+```
+```{r,error=TRUE}
+#Example 5
+#Type of group_by_x: null, Type of summarise_x: numeric
+#The function is supposed to fail because the input group_by_x is not a column in the dataset
+example5 <- group_statistics(vancouver_trees, empty_name, diameter)
+```
+```{r,error=TRUE}
+#Example 6
+#Type of group_by_x: character, Type of summarise_x: character
+#The function is supposed to fail because the input summarise_x is not numeric.
+example6 <- group_statistics(vancouver_trees, assigned, on_street)
+```
+
+## Exercise 4: Test the Function
+
+### Test 1: Vector with different types
+
+```{r}
+test_that("Test 1:", {
+  expect_equal(class(group_statistics(vancouver_trees, root_barrier, diameter))[1], "tbl_df")
+  expect_equal(class(group_statistics(vancouver_trees, civic_number, diameter))[1], "tbl_df")
+  expect_equal(class(group_statistics(vancouver_trees, date_planted, diameter))[1], "tbl_df")
+})
+```
+### Test 2: Vector with NA’s
+```{r}
+test_that("Test 2:", {
+  expect_error(group_statistics(vancouver_trees, NA, diameter))
+  expect_error(group_statistics(vancouver_trees, civic_number, NA))
+  expect_error(group_statistics(NA, civic_number, diameter))
+})
+```
+
+### Test 3: Vector of length 0
+```{r}
+test_that("Test 3:", {
+  expect_error(group_statistics(vancouver_trees, " ", diameter))
+  expect_error(group_statistics(vancouver_trees, civic_number, numeric(0)))
+})
+```
