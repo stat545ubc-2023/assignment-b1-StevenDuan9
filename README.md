@@ -1,4 +1,4 @@
-# Mini-Data Analysis
+# Assignment B-1: Making a function
 ## Overview
 This repository is created to complete Assignment 1 & 2 as a part of STAT 545B course in UBC.
 In assignment B1, I write a function which is used to bundle a specific group_by() %>%  summarise() workflow. Some examples and corresponding tests are also included.
